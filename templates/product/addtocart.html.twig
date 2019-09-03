@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+{% for item in product %}
+    Naam: {{ item[2].naam }}<br/>
+    Prijs: &euro; {{ item[2].prijs }}<br/>
+    Omschrijving: {{ item[2].omgschrijving }}<br/>
+    Aantal: {{ item[1] }}
+    {% endfor %}
+{% endblock %}
