@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Product;
+use App\Form\CheckoutType;
 use App\Form\ProductType;
 use App\Repository\ProductRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -10,6 +11,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Swift_Mailer;
+use Swift_Message;
 
 /**
  * @Route("/product")
@@ -91,7 +94,7 @@ class ProductController extends AbstractController
      */
     public function delete(Request $request, Product $product): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$product->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $product->getId(), $request->request->get('_token'))) {
             $entityManager = $this->getDoctrine()->getManager();
             $entityManager->remove($product);
             $entityManager->flush();
@@ -101,29 +104,74 @@ class ProductController extends AbstractController
     }
 
     /**
-    * @Route("/{id}/cart", name="AddToCart")
+     * @Route("/{id}/cart", name="AddToCart")
      */
-    public function AddToCart($id, ProductRepository $productRepository)
+    public function AddToCart(Product $product)
     {
+        $e = $product->getId();
         $getCart = $this->session->get('cart', []);
-        if(isset($getCart[$id])){
-            $getCart[$id]['aantal']++;
-        } else{
-            $getCart[$id] = array('aantal' => 1);
+        $totaal = 0;
+        if (isset($getCart[$e])) {
+            $getCart[$e]['aantal']++;
+        } else {
+            $getCart[$e] = array(
+                'aantal' => 1,
+                'naam' => $product->getNaam(),
+                'prijs' => $product->getPrijs(),
+
+            );
         }
         $this->session->set('cart', $getCart);
         $cart = $this->session->get('cart');
         $cartArray = [];
-        foreach($cart as $id => $product){
+        foreach ($cart as $e => $product) {
             $res = $this->getDoctrine()
                 ->getRepository(Product::class)
-                ->find($id);
+                ->find($e);
+            array_push($cartArray, [$e, $product['aantal'], $res]);
+            $totaal = $totaal +($product['aantal'] * $res->getPrijs());
+        }
+        return $this->render('product/addtocart.html.twig', [
+            'product' => $cartArray,
+            'totaal' => $totaal
+        ]);
+    }
+
+    /**
+     * @Route("/afrekenen", name="afrekenen", methods={"POST", "GET"})
+     */
+    public function afrekenen(Request $request, Swift_Mailer $mailer): Response
+    {
+        $form = $this->createForm(CheckoutType::class);
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $naam = $form->get('name')->getData();
+            $email = $form->get('e-mail')->getData();
+
+            $message = (new Swift_Message('Factuur'))
+                ->setFrom('blopeeey@gmail.com')
+                ->setTo('blopeeey@gmail.com')
+                ->setBody('factuur');
+            $mailer->send($message);
+            $this->session->clear();
+            return $this->redirect('/');
+        }
+        $totaal = 0;
+        $cart = $this->session->get('cart');
+        $cartArray = [];
+        foreach ($cart as $e => $product) {
+            $res = $this->getDoctrine()
+                ->getRepository(Product::class)
+                ->find($e);
+            array_push($cartArray, [$e, $product['aantal'], $res]);
+            $totaal = $totaal +($product['aantal'] * $res->getPrijs());
         }
 
-        array_push($cartArray, [$id, $product['aantal'], $res]);
 
-        return $this->render('product/addtocart.html.twig', [
-            'product' =>$cartArray
+        return $this->render('product/afrekenen.html.twig', [
+            'form' => $form->createView(),
+            'product' => $cartArray,
+            'totaal' => $totaal
         ]);
     }
 }

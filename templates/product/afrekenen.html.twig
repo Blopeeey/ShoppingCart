@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h2>Afrekenen</h2>
+    {{ include('product/_form.html.twig', {'button_label': 'Afrekenen'}) }}
+
+    <div class="yee" style="margin: -150px 500px 500px 400px">
+        <h4>Producten in cart</h4>
+    {% for item in product %}
+        Naam: {{ item[2].naam }}<br/>
+        Prijs: &euro;{{  item[2].prijs }}<br/>
+        Aantal: {{ item[1] }}</br>
+        Totaal: &euro;{{ item[2].prijs * item[1] }}<br/>
+        <br/>
+    {% endfor %}
+        Totale prijs: &euro;{{ totaal }}<br/>
+    </div>
+{% endblock %}

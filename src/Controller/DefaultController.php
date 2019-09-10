@@ -2,8 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\Product;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use App\Form\CheckoutType;
 
 class DefaultController extends AbstractController
 {
@@ -17,6 +22,13 @@ class DefaultController extends AbstractController
         ]);
     }
 
+    private $session;
+
+    public function __construct(SessionInterface $session)
+    {
+        $this->session = $session;
+    }
+
     /**
      * @Route("/default", name="default")
      */
@@ -26,4 +38,17 @@ class DefaultController extends AbstractController
             'controller_name' => 'DefaultController',
         ]);
     }
+
+//    /**
+//     * @Route("/afrekenen", name="afrekenen")
+//     */
+//    public function afrekenen(Request $request): Response
+//    {
+//        $form = $this->createForm(CheckoutType::class);
+//        $form->handleRequest($request);
+//
+//        return $this->render('product/afrekenen.html.twig', [
+//            'form' => $form->createView()
+//        ]);
+//    }
 }
