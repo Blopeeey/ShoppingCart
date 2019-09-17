@@ -2,6 +2,7 @@
 
 {% block body %}
 {% for item in product %}
+    <div class="yee">
     Naam: {{ item[2].naam }}<br/>
     Prijs: &euro;{{  item[2].prijs }}<br/>
     Aantal: {{ item[1] }}</br>
@@ -10,4 +11,5 @@
     {% endfor %}
     Totale prijs: &euro;{{ totaal }}<br/>
     <a href="/afrekenen">Afrekenen</a>
+    </div>
 {% endblock %}

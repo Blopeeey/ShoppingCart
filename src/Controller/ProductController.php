@@ -144,6 +144,14 @@ class ProductController extends AbstractController
     {
         $form = $this->createForm(CheckoutType::class);
         $form->handleRequest($request);
+        $cart = $this->session->get('cart');
+
+        foreach ($cart as $e => $product) {
+            $res = $this->getDoctrine()
+                ->getRepository(Product::class)
+                ->find($e);
+        }
+
         if ($form->isSubmitted() && $form->isValid()) {
             $naam = $form->get('name')->getData();
             $email = $form->get('e-mail')->getData();
@@ -151,7 +159,11 @@ class ProductController extends AbstractController
             $message = (new Swift_Message('Factuur'))
                 ->setFrom('blopeeey@gmail.com')
                 ->setTo('blopeeey@gmail.com')
-                ->setBody('factuur');
+                ->setBody('
+                <h2>Thank you for purchasing our product' . $naam . ' </h2><br/>
+                Your order information: <br/> Product name: ' . $product['naam'] . '<br/> Product amount ' . $product['aantal'] . '<br/><br/> Total price ' . $product['prijs']
+
+                    , 'text/html');
             $mailer->send($message);
             $this->session->clear();
             return $this->redirect('/');
